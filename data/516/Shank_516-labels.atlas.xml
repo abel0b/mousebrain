@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created by Amira, www.vsg3d.com -->
+<Atlas>
+ <Area abbrev="Exterior" value="1" id="empty" name="Exterior">
+  <color g="0" r="0" b="0"/>
+  <Surface>Exterior</Surface>
+ </Area>
+ <Area abbrev="Inside" value="2" id="empty" name="Inside">
+  <color g="0" r="163" b="204"/>
+  <Surface>Inside</Surface>
+ </Area>
+ <Area abbrev="ventricles" value="3" id="empty" name="ventricles">
+  <color g="255" r="0" b="0"/>
+  <Surface>ventricles</Surface>
+ </Area>
+ <Area abbrev="olfactory_bulbs" value="4" id="empty" name="olfactory_bulbs">
+  <color g="255" r="255" b="0"/>
+  <Surface>olfactory_bulbs</Surface>
+ </Area>
+</Atlas>
