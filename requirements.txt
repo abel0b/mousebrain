@@ -3,3 +3,5 @@ jupyterlab
 nibabel
 sklearn
 matplotlib
+pydot
+graphviz
