@@ -1,22 +1,17 @@
 import data
 import tensorflow
 from tensorflow.keras.models import load_model
-from metrics import dice
+from network import dice_coefficient, dice_coefficient_loss
 import matplotlib.pyplot
 
 _data_train, data_test, _label_train, label_test = data.load_data()
-data_test = data_test.reshape((data_test.shape[0]*128, 128, 128, 1))
-label_test = label_test.reshape((label_test.shape[0]*128, 128, 128, 1))
-
-# def create_mask(pred_mask):
-#     pred_mask =
-#     return pred_mask
+data_test, label_test = data.fill_augment(data_test, label_test, 128)
 
 dependencies = {
-    'dice': dice
+    "dice_coefficient": dice_coefficient,
+    "dice_coefficient_loss": dice_coefficient_loss,
 }
-
-model = load_model("models/unet2d.h5", custom_objects=dependencies)
+model = load_model("models/unet3d.h5", custom_objects=dependencies)
 score = model.evaluate(data_test, label_test)
 print(score)
 

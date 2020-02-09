@@ -1,8 +1,59 @@
 import numpy
 import nibabel
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.preprocessing.image import ImageDataGenerator, random_rotation
 import matplotlib.pyplot
+import time
+from tensorflow.keras.utils import Sequence
+import tensorflow_addons as tfa
+from scipy.ndimage import rotate
+from matplotlib.animation import FuncAnimation
+
+def random_angle(rotation_range=4.0):
+    return numpy.random.uniform(-rotation_range/2.0, rotation_range/2.0)
+
+def threshold(val):
+    return 1.0 if val>0.8 else 0.0
+
+thresholdv = numpy.vectorize(threshold)
+
+def augment(orig_data, orig_label):
+    new_data, new_label = orig_data, orig_label
+
+    # Flip image
+    if numpy.random.randint(0,2) == 0:
+        new_data = numpy.flip(orig_data, axis=2) 
+        new_label = numpy.flip(orig_label, axis=2) 
+    
+    # Rotate image in all planes
+    angle = random_angle()
+    new_data = rotate(new_data, angle, axes=(0,1), reshape=False, mode="nearest")
+    new_label = rotate(new_label, angle, axes=(0,1), reshape=False, mode="constant")
+    
+    angle = random_angle()
+    new_data = rotate(new_data, angle, axes=(1,2), reshape=False, mode="nearest")
+    new_label = rotate(new_label, angle, axes=(1,2), reshape=False, mode="constant")
+    
+    angle = random_angle()
+    new_data = rotate(new_data, angle, axes=(0,2), reshape=False, mode="nearest")
+    new_label = rotate(new_label, angle, axes=(0,2), reshape=False, mode="constant")
+    
+    return new_data, thresholdv(new_label)
+
+def fill_augment(data, labels, size):
+    new_data = []
+    new_labels = []
+
+    for i in range(size-data.shape[0]):
+        orig = numpy.random.randint(0, data.shape[0])
+        newx, newy = augment(data[orig], labels[orig])
+        new_data.append(newx)
+        new_labels.append(newy)
+
+    new_data = numpy.array(new_data)
+    new_labels = numpy.array(new_labels)
+
+    return numpy.concatenate((data, new_data)), numpy.concatenate((labels, new_labels))
 
 """
 Load dataset
@@ -19,50 +70,69 @@ def load_data():
 
     data = numpy.array(list(map(load_nii_file, data_files)))
     labels = numpy.array(list(map(load_nii_file, labels_files)))
-    print("Data successfully loadded")
 
     data_train, data_test, label_train, label_test = train_test_split(data, labels, test_size=0.2)
 
-    data_train = data_train.reshape((data_train.shape[0]*128, 128, 128, 1))
-    data_test = data_test.reshape((data_test.shape[0]*128, 128, 128, 1))
-    label_train = label_train.reshape((label_train.shape[0]*128, 128, 128, 1))
-    label_test = label_test.reshape((label_test.shape[0]*128, 128, 128, 1))
-
+    data_train = numpy.swapaxes(data_train,1,3).reshape((data_train.shape[0], 128, 128, 128, 1))
+    data_test = numpy.swapaxes(data_test,1,3).reshape((data_test.shape[0], 128, 128, 128, 1))
+    label_train = numpy.swapaxes(label_train,1,3).reshape((label_train.shape[0], 128, 128, 128, 1))
+    label_test = numpy.swapaxes(label_test,1,3).reshape((label_test.shape[0], 128, 128, 128, 1))
+    
     return data_train, data_test, label_train, label_test
 
-"""
-Augment dataset
-"""
-def data_generator(data):
-    data_train, data_test, label_train, label_test = data
+class MouseBrainSequence(Sequence):
+    def __init__(self, dataset, size, batch_size=32):
+        self.data, self.labels = dataset
+        self.batch_size = batch_size
+        self.size = size
+        self.seed = int(time.time())
+        self.batch_shape = (batch_size, 128, 128, 128, 1)
+        self.rotation_range = 4.0
+    
+    def __len__(self):
+        return self.size // self.batch_size
 
-    datagen_train = ImageDataGenerator(
-        rotation_range=0.2,
-        width_shift_range=0.05,
-        height_shift_range=0.05,
-        shear_range=0.05,
-        zoom_range=0.05,
-        horizontal_flip=True,
-        fill_mode='nearest'
-    )
-    datagen_train.fit(data_train)
+    def __getitem__(self, index):
+        numpy.random.seed(self.seed+index)
+        batch_data = []
+        batch_labels = []
+    
+        for idx in range(self.batch_size):
+            orig = numpy.random.randint(0, self.data.shape[0]) 
+            new_data, new_label = augment(self.data[orig], self.labels[orig])
+            batch_data.append(new_data)
+            batch_labels.append(new_label)
 
-    datagen_test = ImageDataGenerator(
-        rotation_range=0.2,
-        width_shift_range=0.05,
-        height_shift_range=0.05,
-        shear_range=0.05,
-        zoom_range=0.05,
-        horizontal_flip=True,
-        fill_mode='nearest'
-    )
-    datagen_test.fit(data_test)
+        batch_data = numpy.array(batch_data).reshape(self.batch_shape)
+        batch_labels = numpy.array(batch_labels).reshape(self.batch_shape)
+        
+        return batch_data, batch_labels
 
-    return datagen_train, datagen_test
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     data_train, data_test, label_train, label_test = load_data()
-    datagen_train, datagen_test = data_generator((data_train, data_test, label_train, label_test))
 
-    for x_batch, y_batch in datagen_train.flow(data_train, label_train, batch_size=32):
-        print(x_batch.shape, y_batch.shape)
+    example = data_train[1].reshape((128,128,128))
+    example_label = label_train[1].reshape((128,128,128))
+
+    example_flip = numpy.flip(example, axis=2)
+    angle = 15.0
+    example_rotate = rotate(example, angle, axes=(1,2), reshape=False, mode="nearest")
+
+    matplotlib.pyplot.matshow(example[64])
+    matplotlib.pyplot.savefig("docs/example.png")
+    
+    matplotlib.pyplot.matshow(example_flip[64])
+    matplotlib.pyplot.savefig("docs/example_flip.png")
+    
+    matplotlib.pyplot.matshow(example_rotate[64])
+    matplotlib.pyplot.savefig("docs/example_rotate.png")
+
+    fig, ax = matplotlib.pyplot.subplots()
+    full_example = numpy.concatenate((example, example_label), axis=2)
+    ax.axis("off")
+    ax.margins(0.0)
+    def update(i):
+        ax.matshow(full_example[i])
+    anim = FuncAnimation(fig, update, frames=numpy.arange(0, 128), interval=80)
+    anim.save("docs/example.gif", dpi=80, writer="imagemagick")
+
