@@ -27,11 +27,11 @@ python src/test.py
 ### Résultats
 Entrainement sur 10 epochs avec 128 données d'entrainements, et un batchsize de 4.
 
-models/unet32-15812270355.h5
+*Modèle:* models/unet3d-15812270355.h5
 
-| Epoch   | Loss    | Dice    |
-| ------- | ------- | ------- |
-| 1       | -0.1993 | 0.199   |
-| 2       | -0.3400 | ??      |
+*History:* models/unet3d-15812270355-history.csv 
+
 
 ![History](docs/loss.png)
+
+Pour regénérer la courbe, utiliser le script `python src/plot.py`.
