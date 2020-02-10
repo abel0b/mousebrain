@@ -27,6 +27,11 @@ python src/test.py
 ### Résultats
 Entrainement sur 10 epochs avec 128 données d'entrainements, et un batchsize de 4.
 
-Coefficient dice : xx
+models/unet32-15812270355.h5
 
-![Courbe d'erreur](docs/loss.png)
+| Epoch   | Loss    | Dice    |
+| ------- | ------- | ------- |
+| 1       | -0.1993 | 0.199   |
+| 2       | -0.3400 | ??      |
+
+![History](docs/loss.png)
