@@ -2,8 +2,8 @@
 #SBATCH -p mistral
 #SBATCH -N1
 #SBATCH --exclusive
-#SBATCH --time=168:00:00
+#SBATCH --time=72:00:00
 
 source ./venv/bin/activate
 
-srun python src/train.py
+srun python src/train.py --load-model models/unet3d-1581270355

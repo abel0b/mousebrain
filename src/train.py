@@ -9,8 +9,8 @@ import time
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.parse_args()
 parser.add_argument("--load-model", help="Load a model")
+parser.parse_args()
 args = parser.parse_args()
 
 epochs = 10
@@ -27,9 +27,9 @@ if args.load_model:
     model_file = args.load_model
     dependencies = {
         "dice_coefficient": network.dice_coefficient,
-        "dice_coefficient_loss": network.dice_coefficient
+        "dice_coefficient_loss": network.dice_coefficient_loss
     }
-    model = load_model(model_file, dependencies=dependencies)
+    model = load_model("{}.h5".format(model_file), custom_objects=dependencies)
 else:
     model_file = "models/unet3d-{}".format(int(time.time()))
     model = network.unet_model_3d((128,128,128,1), depth=2)
@@ -38,7 +38,7 @@ model.summary()
 
 
 checkpoint = ModelCheckpoint("{}.h5".format(model_file), save_best_only=True)
-csv_logger = CSVLogger("{}-history.csv".format(model_file), append=False, separator=" ")
+csv_logger = CSVLogger("{}-history.csv".format(model_file), append=True, separator=" ")
 
 model_history = model.fit(
     train_sequence,
