@@ -25,7 +25,7 @@ python src/test.py
 ```
 
 ### Résultats
-Entrainement sur 10 epochs avec 128 données d'entrainements, et un batchsize de 4.
+Entrainement sur 15 epochs avec 128 données d'entrainements, et un batchsize de 4.
 
 *Modèle:* models/unet3d-15812270355.h5
 
