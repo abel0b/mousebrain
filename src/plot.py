@@ -32,6 +32,6 @@ ax2.set_xlabel("epoch")
 ax1 = ax2.twinx()
 ax1.plot(epoch, dice_coefficient, color="blue", label="dice coefficient")
 ax1.set_ylabel("dice_coefficient", color="blue")
-plt.xlim(0,10)
+#plt.xlim(0,10)
 
 plt.savefig("docs/loss.png")
